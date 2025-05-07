@@ -1,0 +1,455 @@
+<script type="text/javascript">
+        var gk_isXlsx = false;
+        var gk_xlsxFileLookup = {};
+        var gk_fileData = {};
+        function filledCell(cell) {
+          return cell !== '' && cell != null;
+        }
+        function loadFileData(filename) {
+        if (gk_isXlsx && gk_xlsxFileLookup[filename]) {
+            try {
+                var workbook = XLSX.read(gk_fileData[filename], { type: 'base64' });
+                var firstSheetName = workbook.SheetNames[0];
+                var worksheet = workbook.Sheets[firstSheetName];
+
+                // Convert sheet to JSON to filter blank rows
+                var jsonData = XLSX.utils.sheet_to_json(worksheet, { header: 1, blankrows: false, defval: '' });
+                // Filter out blank rows (rows where all cells are empty, null, or undefined)
+                var filteredData = jsonData.filter(row => row.some(filledCell));
+
+                // Heuristic to find the header row by ignoring rows with fewer filled cells than the next row
+                var headerRowIndex = filteredData.findIndex((row, index) =>
+                  row.filter(filledCell).length >= filteredData[index + 1]?.filter(filledCell).length
+                );
+                // Fallback
+                if (headerRowIndex === -1 || headerRowIndex > 25) {
+                  headerRowIndex = 0;
+                }
+
+                // Convert filtered JSON back to CSV
+                var csv = XLSX.utils.aoa_to_sheet(filteredData.slice(headerRowIndex)); // Create a new sheet from filtered array of arrays
+                csv = XLSX.utils.sheet_to_csv(csv, { header: 1 });
+                return csv;
+            } catch (e) {
+                console.error(e);
+                return "";
+            }
+        }
+        return gk_fileData[filename] || "";
+        }
+        </script><!DOCTYPE html>
+<html lang="pt">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Comparação de Preços - NCSR Angola vs Angbu Comércio</title>
+    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f8f9fa;
+        }
+        .price-better {
+            background-color: #d1fae5;
+            font-weight: bold;
+            color: #047857;
+        }
+        .price-worse {
+            color: #7f1d1d;
+        }
+        .logo-container {
+            height: 80px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .logo-container img {
+            max-height: 100%;
+            max-width: 100%;
+            object-fit: contain;
+        }
+        .product-img {
+            max-width: 100px;
+            max-height: 100px;
+            object-fit: contain;
+        }
+        .category-header {
+            background-color: #1e40af;
+            color: white;
+        }
+        @media print {
+            .container {
+                max-width: 100% !important;
+                width: 100% !important;
+            }
+            .no-print {
+                display: none;
+            }
+        }
+    </style>
+</head>
+<body class="py-8">
+    <div class="container mx-auto px-4">
+        <header class="mb-8">
+            <h1 class="text-3xl font-bold text-center mb-4">Comparação de Preços</h1>
+            
+            <div class="flex flex-col md:flex-row justify-between items-center mb-6">
+                <div class="w-full md:w-1/2 p-4">
+                    <div class="logo-container">
+                        <img src="https://ncrangola.vtexassets.com/assets/vtex.file-manager-graphql/images/2d113110-32cd-460f-85f7-5ecc1a2ba6a7___58d4de006ad670dfffdb03d3dba3e2c6.png" alt="NCSR Angola Logo">
+                    </div>
+                </div>
+                <div class="w-full md:w-1/2 p-4">
+                    <div class="logo-container">
+                        <img src="https://grupoysam.com/wp-content/uploads/2025/05/Angbu-Comercio-Logo.png" alt="Angbu Comércio Logo">
+                    </div>
+                </div>
+            </div>
+            
+            <p class="text-center text-gray-600 mb-2">Análise comparativa de preços de produtos informáticos</p>
+            <p class="text-center text-gray-500 text-sm">Preços em Kwanzas (AKZ)</p>
+            <div class="text-center mt-4 no-print">
+                <button onclick="downloadPDF()" class="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700">Download PDF</button>
+            </div>
+        </header>
+
+        <!-- Routers Section -->
+        <section class="mb-10">
+            <h2 class="text-2xl font-bold mb-4">Routers</h2>
+            <div class="overflow-x-auto">
+                <table class="w-full border-collapse table-auto">
+                    <thead>
+                        <tr class="category-header">
+                            <th class="p-3 text-left">Produto</th>
+                            <th class="p-3">Imagem</th>
+                            <th class="p-3 text-right">Preço NCSR</th>
+                            <th class="p-3 text-right">Preço Angbu</th>
+                            <th class="p-3 text-right">Diferença</th>
+                        </tr>
+                    </thead>
+                    <tbody class="bg-white">
+                        <tr class="border-b">
+                            <td class="p-3">ROUTER MI 4A 1200 Mbps BRANCO</td>
+                            <td class="p-3 text-center">
+                                <img src="https://ncrangola.vtexassets.com/arquivos/ids/162050-198-198?v=638730536437070000&width=198&height=198&aspect=true" alt="ROUTER MI WIFI 4A AC1200" class="product-img mx-auto">
+                            </td>
+                            <td class="p-3 text-right price-better">25.536,00</td>
+                            <td class="p-3 text-right">29.500,00</td>
+                            <td class="p-3 text-right text-green-600">-3.964,00</td>
+                        </tr>
+                        <tr class="border-b bg-gray-50">
+                            <td class="p-3">ROUTER MI 4C 300 Mbps BRANCO</td>
+                            <td class="p-3 text-center">
+                                <span class="text-gray-500 text-sm italic">Imagem não disponível</span>
+                            </td>
+                            <td class="p-3 text-right text-gray-500">Não disponível</td>
+                            <td class="p-3 text-right price-better">20.500,00</td>
+                            <td class="p-3 text-right">-</td>
+                        </tr>
+                        <tr class="border-b">
+                            <td class="p-3">ROUTER WI-FI TP-LINK AC 1200</td>
+                            <td class="p-3 text-center">
+                                <img src="https://ncrangola.vtexassets.com/arquivos/ids/167091-198-198?v=638774518264730000&width=198&height=198&aspect=true" alt="Router Wifi AC1200 Dual Band" class="product-img mx-auto">
+                            </td>
+                            <td class="p-3 text-right price-better">22.387,32</td>
+                            <td class="p-3 text-right">35.800,00</td>
+                            <td class="p-3 text-right text-green-600">-13.412,68</td>
+                        </tr>
+                        <tr class="border-b bg-gray-50">
+                            <td class="p-3">ROUTER WI-FI TP-LINK ARCHER A5</td>
+                            <td class="p-3 text-center">
+                                <span class="text-gray-500 text-sm italic">Imagem não disponível</span>
+                            </td>
+                            <td class="p-3 text-right text-gray-500">Não disponível</td>
+                            <td class="p-3 text-right price-better">35.800,00</td>
+                            <td class="p-3 text-right">-</td>
+                        </tr>
+                        <tr class="border-b">
+                            <td class="p-3">ROUTER 4G HUAWEI C/SIM</td>
+                            <td class="p-3 text-center">
+                                <img src="https://ncrangola.vtexassets.com/arquivos/ids/168992-198-198?v=638808484018470000&width=198&height=198&aspect=true" alt="Router wifi 3g/4g n portátil" class="product-img mx-auto">
+                            </td>
+                            <td class="p-3 text-right price-better">25.751,00</td>
+                            <td class="p-3 text-right">48.500,00</td>
+                            <td class="p-3 text-right text-green-600">-22.749,00</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </section>
+
+        <!-- Toners Section -->
+        <section class="mb-10">
+            <h2 class="text-2xl font-bold mb-4">Toners</h2>
+            <div class="overflow-x-auto">
+                <table class="w-full border-collapse table-auto">
+                    <thead>
+                        <tr class="category-header">
+                            <th class="p-3 text-left">Produto</th>
+                            <th class="p-3">Imagem</th>
+                            <th class="p-3 text-right">Preço NCSR</th>
+                            <th class="p-3 text-right">Preço Angbu</th>
+                            <th class="p-3 text-right">Diferença</th>
+                        </tr>
+                    </thead>
+                    <tbody class="bg-white">
+                        <tr class="border-b">
+                            <td class="p-3">TONER HP LASERJET 17A</td>
+                            <td class="p-3 text-center">
+                                <img src="https://ncrangola.vtexassets.com/arquivos/ids/165417-198-198?v=638757239899930000&width=198&height=198&aspect=true" alt="Toner 17a preto" class="product-img mx-auto">
+                            </td>
+                            <td class="p-3 text-right">92.794,86</td>
+                            <td class="p-3 text-right price-better">78.450,00</td>
+                            <td class="p-3 text-right text-red-600">+14.344,86</td>
+                        </tr>
+                        <tr class="border-b bg-gray-50">
+                            <td class="p-3">TONER HP LASERJET 415A PRETO</td>
+                            <td class="p-3 text-center">
+                                <img src="https://ncrangola.vtexassets.com/arquivos/ids/164323-198-198?v=638752149887870000&width=198&height=198&aspect=true" alt="Toner 415a preto" class="product-img mx-auto">
+                            </td>
+                            <td class="p-3 text-right">115.064,76</td>
+                            <td class="p-3 text-right price-better">96.500,00</td>
+                            <td class="p-3 text-right text-red-600">+18.564,76</td>
+                        </tr>
+                        <tr class="border-b">
+                            <td class="p-3">TONER HP LASERJET 415A AMARELO</td>
+                            <td class="p-3 text-center">
+                                <img src="https://ncrangola.vtexassets.com/arquivos/ids/164530-198-198?v=638753874008630000&width=198&height=198&aspect=true" alt="Toner 415a amarelo" class="product-img mx-auto">
+                            </td>
+                            <td class="p-3 text-right">148.914,78</td>
+                            <td class="p-3 text-right price-better">135.450,00</td>
+                            <td class="p-3 text-right text-red-600">+13.464,78</td>
+                        </tr>
+                        <tr class="border-b bg-gray-50">
+                            <td class="p-3">TONER HP LASERJET 415A AZUL</td>
+                            <td class="p-3 text-center">
+                                <img src="https://ncrangola.vtexassets.com/arquivos/ids/162608-198-198?v=638737573426200000&width=198&height=198&aspect=true" alt="Toner 415a ciano" class="product-img mx-auto">
+                            </td>
+                            <td class="p-3 text-right">157.852,38</td>
+                            <td class="p-3 text-right price-better">135.450,00</td>
+                            <td class="p-3 text-right text-red-600">+22.402,38</td>
+                        </tr>
+                        <tr class="border-b">
+                            <td class="p-3">TONER HP LASERJET 415A MAGENTA</td>
+                            <td class="p-3 text-center">
+                                <img src="https://ncrangola.vtexassets.com/arquivos/ids/163674-198-198?v=638748618283500000&width=198&height=198&aspect=true" alt="Toner 415a magenta" class="product-img mx-auto">
+                            </td>
+                            <td class="p-3 text-right">157.852,38</td>
+                            <td class="p-3 text-right price-better">135.450,00</td>
+                            <td class="p-3 text-right text-red-600">+22.402,38</td>
+                        </tr>
+                        <tr class="border-b bg-gray-50">
+                            <td class="p-3">TONER LASERJET HP 44A</td>
+                            <td class="p-3 text-center">
+                                <img src="https://ncrangola.vtexassets.com/arquivos/ids/164751-198-198?v=638754014234330000&width=198&height=198&aspect=true" alt="Toner 44a" class="product-img mx-auto">
+                            </td>
+                            <td class="p-3 text-right">67.408,20</td>
+                            <td class="p-3 text-right price-better">61.750,00</td>
+                            <td class="p-3 text-right text-red-600">+5.658,20</td>
+                        </tr>
+                        <tr class="border-b">
+                            <td class="p-3">TONER LASERJET HP 85A</td>
+                            <td class="p-3 text-center">
+                                <img src="https://ncrangola.vtexassets.com/arquivos/ids/166393-198-198?v=638759998305130000&width=198&height=198&aspect=true" alt="Toner 85a" class="product-img mx-auto">
+                            </td>
+                            <td class="p-3 text-right">103.515,42</td>
+                            <td class="p-3 text-right price-better">85.600,00</td>
+                            <td class="p-3 text-right text-red-600">+17.915,42</td>
+                        </tr>
+                        <tr class="border-b bg-gray-50">
+                            <td class="p-3">TONER LASERJET HP 59A</td>
+                            <td class="p-3 text-center">
+                                <img src="https://ncrangola.vtexassets.com/arquivos/ids/165212-198-198?v=638755628585500000&width=198&height=198&aspect=true" alt="Toner 59a" class="product-img mx-auto">
+                            </td>
+                            <td class="p-3 text-right">151.126,38</td>
+                            <td class="p-3 text-right price-better">135.800,00</td>
+                            <td class="p-3 text-right text-red-600">+15.326,38</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </section>
+
+        <!-- Tinteiros Section -->
+        <section class="mb-10">
+            <h2 class="text-2xl font-bold mb-4">Tinteiros (Cartuchos de Tinta)</h2>
+            <div class="overflow-x-auto">
+                <table class="w-full border-collapse table-auto">
+                    <thead>
+                        <tr class="category-header">
+                            <th class="p-3 text-left">Produto</th>
+                            <th class="p-3">Imagem</th>
+                            <th class="p-3 text-right">Preço NCSR</th>
+                            <th class="p-3 text-right">Preço Angbu</th>
+                            <th class="p-3 text-right">Diferença</th>
+                        </tr>
+                    </thead>
+                    <tbody class="bg-white">
+                        <tr class="border-b">
+                            <td class="p-3">TINTEIRO 650 HP BLACK</td>
+                            <td class="p-3 text-center">
+                                <img src="https://ncrangola.vtexassets.com/arquivos/ids/158649-198-198?v=638676152439170000&width=198&height=198&aspect=true" alt="Tinteiro 650 preto" class="product-img mx-auto">
+                            </td>
+                            <td class="p-3 text-right">19.014,06</td>
+                            <td class="p-3 text-right price-better">18.500,00</td>
+                            <td class="p-3 text-right text-red-600">+514,06</td>
+                        </tr>
+                        <tr class="border-b bg-gray-50">
+                            <td class="p-3">TINTEIRO 650 HP COR</td>
+                            <td class="p-3 text-center">
+                                <img src="https://ncrangola.vtexassets.com/arquivos/ids/158640-198-198?v=638676152274570000&width=198&height=198&aspect=true" alt="Tinteiro 650 color" class="product-img mx-auto">
+                            </td>
+                            <td class="p-3 text-right">16.510,62</td>
+                            <td class="p-3 text-right price-better">16.150,00</td>
+                            <td class="p-3 text-right text-red-600">+360,62</td>
+                        </tr>
+                        <tr class="border-b">
+                            <td class="p-3">TINTEIRO 652 HP PRETO</td>
+                            <td class="p-3 text-center">
+                                <img src="https://ncrangola.vtexassets.com/arquivos/ids/164483-198-198?v=638753854757800000&width=198&height=198&aspect=true" alt="Tinteiro 652 preto" class="product-img mx-auto">
+                            </td>
+                            <td class="p-3 text-right">20.318,22</td>
+                            <td class="p-3 text-right price-better">19.950,00</td>
+                            <td class="p-3 text-right text-red-600">+368,22</td>
+                        </tr>
+                        <tr class="border-b bg-gray-50">
+                            <td class="p-3">TINTEIRO 652 HP COR</td>
+                            <td class="p-3 text-center">
+                                <img src="https://ncrangola.vtexassets.com/arquivos/ids/164440-198-198?v=638753840283370000&width=198&height=198&aspect=true" alt="Tinteiro 652 tricolour" class="product-img mx-auto">
+                            </td>
+                            <td class="p-3 text-right">17.293,80</td>
+                            <td class="p-3 text-right price-better">17.000,00</td>
+                            <td class="p-3 text-right text-red-600">+293,80</td>
+                        </tr>
+                        <tr class="border-b">
+                            <td class="p-3">TINTEIRO 123 HP BLACK</td>
+                            <td class="p-3 text-center">
+                                <img src="https://ncrangola.vtexassets.com/arquivos/ids/163768-198-198?v=638748671617100000&width=198&height=198&aspect=true" alt="Tinteiro 123 preto" class="product-img mx-auto">
+                            </td>
+                            <td class="p-3 text-right">17.877,48</td>
+                            <td class="p-3 text-right price-better">17.200,00</td>
+                            <td class="p-3 text-right text-red-600">+677,48</td>
+                        </tr>
+                        <tr class="border-b bg-gray-50">
+                            <td class="p-3">TINTEIRO 123 HP COR</td>
+                            <td class="p-3 text-center">
+                                <img src="https://ncrangola.vtexassets.com/arquivos/ids/164744-198-198?v=638754013032830000&width=198&height=198&aspect=true" alt="Tinteiro 123 tricolour" class="product-img mx-auto">
+                            </td>
+                            <td class="p-3 text-right">19.720,86</td>
+                            <td class="p-3 text-right price-better">19.350,00</td>
+                            <td class="p-3 text-right text-red-600">+370,86</td>
+                        </tr>
+                        <tr class="border-b">
+                            <td class="p-3">TINTEIRO 122 HP PRETO</td>
+                            <td class="p-3 text-center">
+                                <img src="https://ncrangola.vtexassets.com/arquivos/ids/165032-198-198?v=638754868627700000&width=198&height=198&aspect=true" alt="Tinteiro 122 preto" class="product-img mx-auto">
+                            </td>
+                            <td class="p-3 text-right">19.044,84</td>
+                            <td class="p-3 text-right price-better">18.950,00</td>
+                            <td class="p-3 text-right text-red-600">+94,84</td>
+                        </tr>
+                        <tr class="border-b bg-gray-50">
+                            <td class="p-3">TINTEIRO 122 HP COR</td>
+                            <td class="p-3 text-center">
+                                <img src="https://ncrangola.vtexassets.com/arquivos/ids/163758-198-198?v=638748668849200000&width=198&height=198&aspect=true" alt="Tinteiro 122 tri-color" class="product-img mx-auto">
+                            </td>
+                            <td class="p-3 text-right">22.684,86</td>
+                            <td class="p-3 text-right price-better">22.500,00</td>
+                            <td class="p-3 text-right text-red-600">+184,86</td>
+                        </tr>
+                        <tr class="border-b">
+                            <td class="p-3">TINTEIRO 305 HP PRETO</td>
+                            <td class="p-3 text-center">
+                                <img src="https://ncrangola.vtexassets.com/arquivos/ids/164712-198-198?v=638753999597100000&width=198&height=198&aspect=true" alt="Tinteiro 305 preto" class="product-img mx-auto">
+                            </td>
+                            <td class="p-3 text-right price-better">14.821,14</td>
+                            <td class="p-3 text-right">15.000,00</td>
+                            <td class="p-3 text-right text-green-600">-178,86</td>
+                        </tr>
+                        <tr class="border-b bg-gray-50">
+                            <td class="p-3">TINTEIRO 305 HP COR</td>
+                            <td class="p-3 text-center">
+                                <img src="https://ncrangola.vtexassets.com/arquivos/ids/165173-198-198?v=638755614938400000&width=198&height=198&aspect=true" alt="Tinteiro 305 color" class="product-img mx-auto">
+                            </td>
+                            <td class="p-3 text-right price-better">14.821,14</td>
+                            <td class="p-3 text-right">15.000,00</td>
+                            <td class="p-3 text-right text-green-600">-178,86</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </section>
+
+        <!-- Papéis Section -->
+        <section class="mb-10">
+            <h2 class="text-2xl font-bold mb-4">Papéis</h2>
+            <div class="overflow-x-auto">
+                <table class="w-full border-collapse table-auto">
+                    <thead>
+                        <tr class="category-header">
+                            <th class="p-3 text-left">Produto</th>
+                            <th class="p-3">Imagem</th>
+                            <th class="p-3 text-right">Preço NCSR</th>
+                            <th class="p-3 text-right">Preço Angbu</th>
+                            <th class="p-3 text-right">Diferença</th>
+                        </tr>
+                    </thead>
+                    <tbody class="bg-white">
+                        <tr class="border-b">
+                            <td class="p-3">PAPEL RESMA A4 PAPERLINE 80G</td>
+                            <td class="p-3 text-center">
+                                <span class="text-gray-500 text-sm italic">Imagem não disponível</span>
+                            </td>
+                            <td class="p-3 text-right text-gray-500">Não disponível</td>
+                            <td class="p-3 text-right price-better">4.375,00</td>
+                            <td class="p-3 text-right">-</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </section>
+
+        <!-- Summary Section -->
+        <section class="mb-10">
+            <h2 class="text-2xl font-bold mb-4">Análise de Preços</h2>
+            <div class="bg-white p-6 rounded-lg shadow">
+                <h3 class="text-xl font-semibold mb-3">Conclusões</h3>
+                <ul class="list-disc pl-5 space-y-2">
+                    <li><span class="font-medium">Routers:</span> NCSR Angola oferece preços mais competitivos em routers, com economia de até 22.749,00 AKZ no caso do Router 4G.</li>
+                    <li><span class="font-medium">Toners:</span> Angbu Comércio tem preços mais vantajosos em todos os toners analisados, com economia de até 22.402,38 AKZ nos toners coloridos.</li>
+                    <li><span class="font-medium">Tinteiros:</span> Em geral, Angbu Comércio oferece preços ligeiramente melhores, exceto nos Tinteiros 305 (preto e cor), onde NCSR é mais barato.</li>
+                </ul>
+
+                <div class="mt-6 grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div class="p-4 border rounded-lg bg-blue-50">
+                        <h4 class="font-bold text-lg mb-2">NCSR Angola - Vantagens</h4>
+                        <ul class="list-disc pl-5">
+                            <li>Melhores preços em equipamentos de rede (routers)</li>
+                            <li>Preço ligeiramente menor em tinteiros modelo 305</li>
+                        </ul>
+                    </div>
+
+                    <div class="p-4 border rounded-lg bg-orange-50">
+                        <h4 class="font-bold text-lg mb-2">Angbu Comércio - Vantagens</h4>
+                        <ul class="list-disc pl-5">
+                            <li>Preços mais competitivos em todos os toners HP</li>
+                            <li>Ligeira vantagem de preço na maioria dos tinteiros</li>
+                            <li>Oferta de papel a preço competitivo</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <footer class="text-center text-gray-500 text-sm mt-8 pb-6">
+            <p>Análise comparativa de preços elaborada com dados atualizados em 07 Maio 2025</p>
+        </footer>
+    </div>
+
+    <script>
+        function downloadPDF() {
+            window.print();
+        }
+    </script>
+</body>
+</html>
